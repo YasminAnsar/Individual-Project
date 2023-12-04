@@ -1,0 +1,150 @@
+With tmp1 as 
+(SELECT 
+    b.account_name,
+    a.iccid,
+    MAX(CASE WHEN cast(date_parse(cast(a.year * 10000 + a.month * 100 + a.day as varchar(255)),'%Y%m%d') as date) = (DATE_TRUNC('month',current_date) - interval '1' month)  - interval '1' day THEN a.sim_state ELSE 0 END) as sim_state_input,
+    MAX(CASE WHEN cast(date_parse(cast(a.year * 10000 + a.month * 100 + a.day as varchar(255)),'%Y%m%d') as date) = DATE_TRUNC('month',current_date) - interval '1' day THEN a.sim_state  ELSE 0 END) as sim_state_output
+FROM
+    subscriber_snapshot a
+        INNER JOIN jpo_new."account_snapshot" b on a."account" = b."account" and a.account_id = b.account_id
+        INNER JOIN (SELECT distinct
+                        account_id
+                from
+                    account_snapshot 
+                 WHERE
+                        cast(date_parse(cast(year * 10000 + month * 100 + day as varchar(255)),'%Y%m%d') as date) --Actual date
+                        BETWEEN DATE_TRUNC('month',current_date) - interval '1' month AND DATE_TRUNC('month',current_date) - interval '1' day
+                        and "account_billable_flag"='Y' 
+                    ) c on a.account_id=c.account_id
+WHERE
+    (
+    cast(date_parse(cast(a.year * 10000 + a.month * 100 + a.day as varchar(255)),'%Y%m%d') as date)
+    = DATE_TRUNC('month',current_date) - interval '1' month - interval '1' day
+        or
+    cast(date_parse(cast(a.year * 10000 + a.month * 100 + a.day as varchar(255)),'%Y%m%d') as date)
+    = DATE_TRUNC('month',current_date) - interval '1' day -- (Last day last month-1M) - Last day last month    
+    )
+        and cast(date_parse(cast(b.year * 10000 + b.month * 100 + b.day as varchar(255)),'%Y%m%d') as date) = current_date - interval '1' day
+GROUP BY 1,2        
+),
+
+ tmp_3 as (SELECT 
+    b.account_name,
+    a.iccid,
+    MAX(CASE WHEN cast(date_parse(cast(a.year * 10000 + a.month * 100 + a.day as varchar(255)),'%Y%m%d') as date) = (DATE_TRUNC('month',current_date) - interval '3' month)  - interval '1' day THEN a.sim_state ELSE 0 END) as sim_state_input,
+    MAX(CASE WHEN cast(date_parse(cast(a.year * 10000 + a.month * 100 + a.day as varchar(255)),'%Y%m%d') as date) = DATE_TRUNC('month',current_date) - interval '1' day THEN a.sim_state  ELSE 0 END) as sim_state_output
+FROM
+    subscriber_snapshot a
+        INNER JOIN jpo_new."account_snapshot" b on a."account" = b."account" and a.account_id = b.account_id
+        INNER JOIN (SELECT distinct
+                    account_id
+              from
+                     account_snapshot  
+              WHERE
+                    cast(date_parse(cast(year * 10000 + month * 100 + day as varchar(255)),'%Y%m%d') as date) --Actual date
+                    BETWEEN DATE_TRUNC('month',current_date) - interval '3' month AND DATE_TRUNC('month',current_date) - interval '1' day
+                    and "account_billable_flag"='Y' 
+                    ) c on a.account_id=c.account_id 
+
+WHERE
+    (
+    cast(date_parse(cast(a.year * 10000 + a.month * 100 + a.day as varchar(255)),'%Y%m%d') as date)
+    = DATE_TRUNC('month',current_date) - interval '3' month - interval '1' day
+        or
+    cast(date_parse(cast(a.year * 10000 + a.month * 100 + a.day as varchar(255)),'%Y%m%d') as date)
+    = DATE_TRUNC('month',current_date) - interval '1' day -- (Last day last month-1M) - Last day last month    
+    )
+        and cast(date_parse(cast(b.year * 10000 + b.month * 100 + b.day as varchar(255)),'%Y%m%d') as date) = current_date - interval '1' day
+GROUP BY 1,2        
+),
+ tmp_6 as (SELECT 
+    b.account_name,
+    a.iccid,
+    MAX(CASE WHEN cast(date_parse(cast(a.year * 10000 + a.month * 100 + a.day as varchar(255)),'%Y%m%d') as date) = (DATE_TRUNC('month',current_date) - interval '6' month)  - interval '1' day THEN a.sim_state ELSE 0 END) as sim_state_input,
+    MAX(CASE WHEN cast(date_parse(cast(a.year * 10000 + a.month * 100 + a.day as varchar(255)),'%Y%m%d') as date) = DATE_TRUNC('month',current_date) - interval '1' day THEN a.sim_state  ELSE 0 END) as sim_state_output
+FROM
+      subscriber_snapshot a
+        INNER JOIN  account_snapshot b on a."account" = b."account" and a.account_id = b.account_id
+  INNER JOIN (SELECT distinct
+                        account_id
+                from
+                 account_snapshot  
+                 WHERE
+                        cast(date_parse(cast(year * 10000 + month * 100 + day as varchar(255)),'%Y%m%d') as date) --Actual date
+                        BETWEEN DATE_TRUNC('month',current_date) - interval '6' month AND DATE_TRUNC('month',current_date) - interval '1' day
+                        and "account_billable_flag"='Y' 
+                    ) c on a.account_id=c.account_id
+WHERE
+    (
+    cast(date_parse(cast(a.year * 10000 + a.month * 100 + a.day as varchar(255)),'%Y%m%d') as date)
+    = DATE_TRUNC('month',current_date) - interval '6' month - interval '1' day
+        or
+    cast(date_parse(cast(a.year * 10000 + a.month * 100 + a.day as varchar(255)),'%Y%m%d') as date)
+    = DATE_TRUNC('month',current_date) - interval '1' day -- (Last day last month-1M) - Last day last month    
+    )
+        and cast(date_parse(cast(b.year * 10000 + b.month * 100 + b.day as varchar(255)),'%Y%m%d') as date) = current_date - interval '1' day
+GROUP BY 1,2        
+),
+ tmp_12 as (SELECT 
+    b.account_name,
+    a.iccid,
+    MAX(CASE WHEN cast(date_parse(cast(a.year * 10000 + a.month * 100 + a.day as varchar(255)),'%Y%m%d') as date) = (DATE_TRUNC('month',current_date) - interval '12' month)  - interval '1' day THEN a.sim_state ELSE 0 END) as sim_state_input,
+    MAX(CASE WHEN cast(date_parse(cast(a.year * 10000 + a.month * 100 + a.day as varchar(255)),'%Y%m%d') as date) = DATE_TRUNC('month',current_date) - interval '1' day THEN a.sim_state  ELSE 0 END) as sim_state_output
+FROM
+        subscriber_snapshot a
+        INNER JOIN jpo_new."account_snapshot" b on a."account" = b."account" and a.account_id = b.account_id
+  INNER JOIN (SELECT distinct
+                        account_id
+                from
+                     account_snapshot  
+                 WHERE
+                        cast(date_parse(cast(year * 10000 + month * 100 + day as varchar(255)),'%Y%m%d') as date) --Actual date
+                        BETWEEN DATE_TRUNC('month',current_date) - interval '12' month AND DATE_TRUNC('month',current_date) - interval '1' day
+                        and "account_billable_flag"='Y' 
+                    ) c on a.account_id=c.account_id
+WHERE
+    (
+    cast(date_parse(cast(a.year * 10000 + a.month * 100 + a.day as varchar(255)),'%Y%m%d') as date)
+    = DATE_TRUNC('month',current_date) - interval '12' month - interval '1' day
+        or
+    cast(date_parse(cast(a.year * 10000 + a.month * 100 + a.day as varchar(255)),'%Y%m%d') as date)
+    = DATE_TRUNC('month',current_date) - interval '1' day -- (Last day last month-1M) - Last day last month    
+    )
+        and cast(date_parse(cast(b.year * 10000 + b.month * 100 + b.day as varchar(255)),'%Y%m%d') as date) = current_date - interval '1' day
+GROUP BY 1,2        
+)
+SELECT
+    account_name,
+    sim_state_input,
+    sim_state_output,
+    '1 Month' as period,
+    count(distinct iccid) as count_sim
+FROM tmp1  
+group by 1,2,3,4
+UNION
+SELECT
+    account_name,
+     sim_state_input,
+    sim_state_output,
+    '3 Month' as period,
+    count(distinct iccid) as count_sim
+FROM tmp_3
+group by 1,2,3,4
+UNION
+SELECT
+    account_name,
+   sim_state_input,
+    sim_state_output,
+    '6 Month' as period,
+    count(distinct iccid) as count_sim
+FROM tmp_6  
+group by 1,2,3,4
+UNION
+SELECT
+    account_name,
+     sim_state_input,
+    sim_state_output,
+    '12 Month' as period,
+    count(distinct iccid) as count_sim
+FROM tmp_12  
+group by 1,2,3,4
